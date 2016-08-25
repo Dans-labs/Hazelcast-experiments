@@ -30,7 +30,7 @@ object Slave extends Util {
   def slave() = {
     val conf = new ClientConfig()
     serialization.Defaults.register(conf.getSerializationConfig)
-    implicit val hz = conf.newClient()
+    val hz = conf.newClient()
 
     val masterToSlaveQueue = hz.getQueue[List[Int]]("master-to-slave")
     val slaveToMasterQueue = hz.getQueue[Int]("slave-to-master")
