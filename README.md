@@ -57,4 +57,3 @@ Steps:
         git clone https://github.com/DANS-KNAW/hazelcast-experiments.git
         cd hazelcast-experiments
         mvn install
-# Hazelcast-experiments
