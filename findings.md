@@ -110,6 +110,29 @@ def pollQueue[T](queue: BlockingQueue[T], scheduler: Scheduler = NewThreadSchedu
 }
 ```
 
-#Future research topics
-* proper shutdown strategies for clients (without loosing data)
-* data persistence when the cluster dies or one node in the cluster dies
+##Demo applications
+This section describes the demo applications created in this study.
+
+###Names Map
+A simple application (see `nl.knaw.dans.experiments.hazelcast.map`) that puts names in a `Map` and reads the values from the `Map` in another part of the application. The program can be run in 4 modes:
+
+* "fill" - fills the `Map` with a number of names
+* "print" - reads all the values from the `Map`
+* "watch" - 'subscribes' to the add-event stream of the `Map` and reports on elements being added
+* "client" - connects to the cluster as a client, reads the size of the `Map` and disconnects immediately thereafter from the cluster.
+
+One remarkable thing we found is that when the `Map` is acquired from Hazelcast, one can (at least in the Scala API) use higher-order functions to iterate over it. When the `Map` is taken as a `IMap` (the Hazelcast implementation), lambdas in the higher-order functions are executed distributed. If classic loops are used instead, the code inside the loop will however be executed on the single instance on which the code is ran.
+
+###Bidirectional server-client communication
+The package `nl.knaw.dans.experiments.hazelcast.queue` defines a server-client communication demo where a server (called `Master`) generates lists of random numbers and puts them in a queue (called `master-to-slave`). A client (called `Slave`) observes this queue and polls the list from the queue, performs a task on this input data and stores the result in another queue (called `slave-to-master`). `Master` observes this latter queue and in this way gets the result of the 'task'.
+
+It should be noted that there can be any number of servers and clients in this scenario. In this case, there is no guarantee of ordering regarding the requests/responses. Some tasks may take longer than others and tasks may be executed in a distributed way.
+
+A corresponding open question is how to match requests and responses. Though we did not yet implement this, we suggest a mapping that contains a UUID as the key and a `null` or the actual response as its value. The request is then send together with this UUID, such that the client can use this in its response.
+
+Another open issue is the input and output format of tasks. While objects and classes may seem most obvious, it should also be considered that these need to be on the classpath of both server and client (which may very well be in separate JARs) and that over time changes to these classes are likely to happen. This latter issue calls for a versioning of the classes/objects, whereas the former calls for a more uniform format to send data from one service to the other. We suggest to look into a universally parsable format such as JSON or XML, which can be constructed and serialized by the sender and can be parsed, interpreted and transformed into appropriate classes/objects by the receiver.
+
+Further and more general issues involve:
+* proper shutdown strategies for clients that are in the middle of executing a job, without terminating directly and therefore loosing (part of) the data
+* resubmitting a task when no response has arrived after a certain amount of time
+* data persistence when either a node or the whole cluster dies
