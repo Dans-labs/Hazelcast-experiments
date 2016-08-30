@@ -58,6 +58,8 @@ val customers = hz.getMap[Int, String]("customers")
 
 All data structures provided by Hazelcast implement the standard interfaces of these data structures as they are defined in Java (both the 'synchronous' and 'concurrent' variants) and can therefore be used as such.
 
+Data structures can be created by both cluster members and clients ([see experiment](https://github.com/rvanheest-DANS-KNAW/Hazelcast-experiments/tree/master/src/main/scala/nl/knaw/dans/experiments/hazelcast/client)).
+
 ##Hazelcast and RxJava
 Besides the standard methods on these data structures, Hazelcast provides event handlers that notify the listeners of events that occur on the observed data structure. In our research we developed a small wrapper around these event handlers, such that they can be transformed into [RxJava](https://github.com/ReactiveX/RxJava) `Observable`s for further processing in a 'reactive' way.
 
