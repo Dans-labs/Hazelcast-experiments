@@ -22,10 +22,12 @@ import com.hazelcast.Scala._
 import com.hazelcast.Scala.client._
 import com.hazelcast.client.config.ClientConfig
 
+import scala.concurrent.duration._
 import scala.io.StdIn
+import scala.language.postfixOps
 import scala.util.Random
 
-object Slave extends Util {
+object Slave {
 
   def slave() = {
     val conf = new ClientConfig()
@@ -43,7 +45,7 @@ object Slave extends Util {
       slaveToMasterQueue.put(i)
     }
 
-    val subscription = pollQueue(masterToSlaveQueue)
+    masterToSlaveQueue.observe(5 seconds)(running.get)
       .map(_.sum)
       .doOnNext(_ => {
         val sleep = new Random().nextGaussian() * 10000
@@ -52,19 +54,21 @@ object Slave extends Util {
       .doOnSubscribe(println("listening to 'master-to-slave' queue"))
       .doOnError(e => println(s"exception in Slave/pollQueue: ${e.getMessage}"))
       .retry
-      .takeWhile(_ => running.get())
       .subscribe(
         send,
         e => println(s"SHOULD NOT OCCUR: $e"),
-        () => { println("completed"); shutdownLatch.countDown() })
+        () => {
+          println("completed")
+          shutdownLatch.countDown()
+        })
 
     while (running.get()) {
-      StdIn.readLine() match {
+      StdIn.readLine(">>> ") match {
         case "exit" => running.compareAndSet(true, false)
+        case s => println(s"$s is not a command")
       }
     }
     shutdownLatch.await()
-    subscription.unsubscribe()
     hz.shutdown()
   }
 }

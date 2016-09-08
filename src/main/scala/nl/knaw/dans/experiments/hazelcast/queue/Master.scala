@@ -22,10 +22,12 @@ import com.hazelcast.Scala._
 import com.hazelcast.Scala.client._
 import com.hazelcast.client.config.ClientConfig
 
+import scala.concurrent.duration._
 import scala.io.StdIn
+import scala.language.postfixOps
 import scala.util.Random
 
-object Master extends Util {
+object Master {
 
   def master() = {
     val conf = new ClientConfig()
@@ -38,11 +40,10 @@ object Master extends Util {
     val running = new AtomicBoolean(true)
     val shutdownLatch = new CountDownLatch(1)
 
-    val subscription = pollQueue(slaveToMasterQueue)
+    slaveToMasterQueue.observe(5 seconds)(running.get)
       .doOnSubscribe(println("listening to 'slave-to-master' queue"))
       .doOnError(e => println(s"exception in Master/pollQueue: ${e.getMessage}"))
       .retry
-      .takeWhile(_ => running.get)
       .subscribe(
         result => { }, // printing already happens in pollQueue
         e => println(s"SHOULD NOT OCCUR: $e"),
@@ -73,7 +74,7 @@ object Master extends Util {
           send(numbers)
       }
     }
-    subscription.unsubscribe()
+    shutdownLatch.await()
     hz.shutdown()
   }
 }

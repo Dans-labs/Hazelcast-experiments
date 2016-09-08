@@ -1,6 +1,6 @@
 #Hazelcast
 
-**This page reports on what I did with Hazelcast for this repository.**
+**This page reports on the research I did with Hazelcast in this repository.**
 
 ##Introduction
 [Hazelcast](https://hazelcast.org/) is a piece of 'middleware' that provides distributed data structures that can be shared between multiple JVMs. The data is stored in a distributed way and shared over all the nodes in cluster. Clients can connect to the cluster and use the data structures to their liking.
@@ -106,8 +106,32 @@ def pollQueue[T](queue: BlockingQueue[T], scheduler: Scheduler = NewThreadSchedu
         case e: Throwable => println("  caught: " + e.getMessage); subscriber.onError(e)
       }
     }
-    subscriber.add(subscription)
-    subscriber.add(worker)
+    subscriber.add(CompositeSubscription(subscription, worker))
+  })
+}
+```
+
+The downside of this implementation is that we cannot cancel a `queue.take()` in any other way than to interrupt the thread by unsubscribing from the worker. This however causes an unintended `InterruptedException` as a terminating `onError` event. The solution is to *not* wait indefinitely until the queue receives a next value. Instead we use the `queue.poll(timeout)` operator, which polls the queue for at most `timeout` units (seconds, milliseconds, ...) and either returns a next value in the queue or a `null` if the operation was timed out without yielding any result. We discard these `null`s and only propagate the successful polls. After each poll cycle (which takes at most `timeout` units of time) it is checked whether to proceed with another poll or to call `onCompleted` on the stream. This decision is taken based on the `running` function, which is implemented by the caller of `pollQueue`.
+
+```scala
+def pollQueue[T](queue: BlockingQueue[T], timeout: Duration, scheduler: Scheduler = NewThreadScheduler())(running: () => Boolean): Observable[T] = {
+  Observable(subscriber => {
+    val worker = scheduler.createWorker
+    val subscription = worker.scheduleRec {
+      try {
+        if (running()) {
+          val t = Option(queue.poll(timeout.toMillis, TimeUnit.MILLISECONDS))
+          println(s"received: $t")
+          t.foreach(subscriber.onNext)
+        }
+        else subscriber.onCompleted()
+      }
+      catch {
+        case e: HazelcastInstanceNotActiveException => subscriber.onCompleted()
+        case e: Throwable => println(s"  caught ${e.getClass.getSimpleName}: ${e.getMessage}"); subscriber.onError(e)
+      }
+    }
+    subscriber.add(CompositeSubscription(subscription, worker))
   })
 }
 ```
@@ -135,6 +159,6 @@ A corresponding open question is how to match requests and responses. Though we 
 Another open issue is the input and output format of tasks. While objects and classes may seem most obvious, it should also be considered that these need to be on the classpath of both server and client (which may very well be in separate JARs) and that over time changes to these classes are likely to happen. This latter issue calls for a versioning of the classes/objects, whereas the former calls for a more uniform format to send data from one service to the other. We suggest to look into a universally parsable format such as JSON or XML, which can be constructed and serialized by the sender and can be parsed, interpreted and transformed into appropriate classes/objects by the receiver.
 
 Further and more general issues involve:
-* proper shutdown strategies for clients that are in the middle of executing a job, without terminating directly and therefore loosing (part of) the data
-* resubmitting a task when no response has arrived after a certain amount of time
-* data persistence when either a node or the whole cluster dies
+- [v] proper shutdown strategies for clients that are in the middle of executing a job, without terminating directly and therefore loosing (part of) the data
+- [ ] resubmitting a task when no response has arrived after a certain amount of time
+- [ ] data persistence when either a node or the whole cluster dies

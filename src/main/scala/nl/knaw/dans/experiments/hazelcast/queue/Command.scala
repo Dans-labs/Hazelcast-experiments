@@ -22,6 +22,7 @@ object Command {
       case "master" => Master.master()
       case "slave" => Slave.slave()
       case "monitor" => Monitor.monitor()
+      case "member" => ClusterMember.member()
     }
   }
 }

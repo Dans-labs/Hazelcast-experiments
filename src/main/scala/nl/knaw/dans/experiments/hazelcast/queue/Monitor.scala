@@ -21,7 +21,7 @@ import com.hazelcast.client.config.ClientConfig
 
 import scala.io.StdIn
 
-object Monitor extends Util {
+object Monitor {
 
   def monitor() = {
     val conf = new ClientConfig()
@@ -41,9 +41,10 @@ object Monitor extends Util {
 
     var running = true
     while (running) {
-      StdIn.readLine() match {
+      StdIn.readLine(">>> ") match {
         case "exit" => running = false
         case "size" => size()
+        case s => println(s"$s is not a command")
       }
     }
     hz.shutdown()
