@@ -159,6 +159,5 @@ A corresponding open question is how to match requests and responses. Though we 
 Another open issue is the input and output format of tasks. While objects and classes may seem most obvious, it should also be considered that these need to be on the classpath of both server and client (which may very well be in separate JARs) and that over time changes to these classes are likely to happen. This latter issue calls for a versioning of the classes/objects, whereas the former calls for a more uniform format to send data from one service to the other. We suggest to look into a universally parsable format such as JSON or XML, which can be constructed and serialized by the sender and can be parsed, interpreted and transformed into appropriate classes/objects by the receiver.
 
 Further and more general issues involve:
-- [v] proper shutdown strategies for clients that are in the middle of executing a job, without terminating directly and therefore loosing (part of) the data
-- [ ] resubmitting a task when no response has arrived after a certain amount of time
-- [ ] data persistence when either a node or the whole cluster dies
+* resubmitting a task when no response has arrived after a certain amount of time
+* data persistence when either a node or the whole cluster dies
