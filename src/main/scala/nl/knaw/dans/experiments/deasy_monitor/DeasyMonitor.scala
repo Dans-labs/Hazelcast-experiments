@@ -27,7 +27,7 @@ object DeasyMonitor extends App {
         case "cluster" => println(hz.getCluster.getMembers)
         case "structures" => println(Option(hz.getDistributedObjects.asScala).filterNot(_.isEmpty).map(_.mkString("\n")).getOrElse("no structures"))
         case "pid-inbox" => pidInboxREPL()
-        case s if s startsWith "result-map " => resultMapREPL(s.replace("result-map ", ""))
+        case s if s startsWith "result-map" => resultMapREPL(s.replace("result-map", "").trim)
         case s => println(s"unknown command: $s")
       }
     }
@@ -41,8 +41,8 @@ object DeasyMonitor extends App {
       StdIn.readLine("[pid-inbox] ") match {
         case "done" => running = false
         case "get" => println(Option(inbox.asScala).filterNot(_.isEmpty).map(_.mkString("\n")).getOrElse("no content"))
-        case s if s startsWith "generate " =>
-          val pidType = s.replace("generates ", "")
+        case s if s startsWith "generate" =>
+          val pidType = s.replace("generate", "").trim
           val (uuid, json) = mkJSON(pidType)
           inbox.put(json)
           println(s"response to 'generate $pidType' can be aquired using uuid $uuid")
@@ -67,7 +67,7 @@ object DeasyMonitor extends App {
         case "done" => running = false
         case "keys" => println(map.keySet().asScala.mkString("\n"))
         case "get" => println(map.asScala.mkString("\n"))
-        case s if s startsWith "get " => println(map.get(s.replace("get ", "")))
+        case s if s startsWith "get" => println(map.get(s.replace("get", "").trim))
         case s => println(s"unknown command: $s")
       }
     }
