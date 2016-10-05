@@ -6,11 +6,12 @@ Inleiding
 ---------
 In dit experiment kijken we wat de mogelijkheden zijn om Hazelcast te gebruiken in het werken met **microservices**. We willen naar een situatie toe waarin de 'monoliet' EASY omgevormd wordt naar een set van microservices die onafhankelijk van elkaar werken, die onafhankelijk van elkaar kunnen worden gedeployed/gereleased en die met elkaar samenwerken middels het sturen van messages/requests. Daarnaast zou het leuk zijn als we de services horizontaal kunnen schalen (meerdere instanties naast elkaar laten draaien om de workload te verdelen), hoewel dit geen directe requirement is in EASY.
 
-**[Hazelcast]** biedt de mogelijkheid om een cluster op te zetten waarin **gedeelde in-memory datastructuren** leven. Denk hierbij aan `Map`, `Queue`, etc. Ieder **member** van dit cluster heeft toegang tot deze datastructuren en kan alle standaard operaties uitvoeren. Daarnaast heeft iedere member (een deel van) iedere datastructuur in zijn geheugen, zodat wanneer een member onverhoopt wegvalt er geen data verloren gaat.
+**[Hazelcast]** (+ [boek]) biedt de mogelijkheid om een cluster op te zetten waarin **gedeelde in-memory datastructuren** leven. Denk hierbij aan `Map`, `Queue`, etc. Ieder **member** van dit cluster heeft toegang tot deze datastructuren en kan alle standaard operaties uitvoeren. Daarnaast heeft iedere member (een deel van) iedere datastructuur in zijn geheugen, zodat wanneer een member onverhoopt wegvalt er geen data verloren gaat.
 
 Naast members biedt Hazelcast ook **clients**, die connectie maken naar het cluster van members en via hen dezelfde operaties kunnen doen op de datastructuren. Een client heeft dus zelf geen (kopie van de) datastructuren in-memory, maar kan ze alleen via het cluster bevragen/muteren/etc.
 
-[Hazelcast]: http://www.google.com/
+[Hazelcast]: https://hazelcast.org/
+[boek]: https://github.com/rvanheest-DANS-KNAW/Hazelcast-experiments/blob/master/books/Mastering_Hazelcast_3.6.pdf
 
 
 Project omschrijving
@@ -50,9 +51,11 @@ Het observeren van de queue en luisteren naar de `responseDS` wordt gedaan midde
 
 Evaluatie
 ---------
-Hazelcast is een platform dat gedeelde datastructuren biedt tussen verschillende members en clients. In deze POC zijn `easy-ingest-flow` en `easy-pid-generator` clients die verbinding maken met het Hazelcast cluster dat aanwezig is op (d/t/a)easy. Dit is in overeenstemming met het design pattern dat wordt voorgesteld in de white paper 'Using Hazelcast with Microservices'.
+Hazelcast is een platform dat gedeelde datastructuren biedt tussen verschillende members en clients. In deze POC zijn `easy-ingest-flow` en `easy-pid-generator` clients die verbinding maken met het Hazelcast cluster dat aanwezig is op (d/t/a)easy. Dit is in overeenstemming met het design pattern dat wordt voorgesteld in de white paper ['Using Hazelcast with Microservices'].
 
 Dit POC is succesvol afgerond en heeft geresulteerd in een werkend systeem dat interactie biedt tussen `easy-ingest-flow` en `easy-pid-generator`. Tijdens het proces zijn we tegen een aantal design decisions en open vragen aangelopen die we hieronder zullen bespreken.
+
+['Using Hazelcast with Microservices']: https://github.com/rvanheest-DANS-KNAW/Hazelcast-experiments/blob/master/books/Microservices_with_Hazelcast.pdf
 
 **Wat te doen met invalide JSON?**
 
@@ -117,11 +120,12 @@ Alternatieven/uitbreidingen
 ---------------------------
 **Apache Camel**
 
-Er zijn libraries en frameworks die voor bijvoorbeeld routing kunnen zorgen tussen verschillende microservices, message queues, ftp-clients, file systems, enz. [Apache Camel] lijkt hiervoor een uitstekende keuze. Dit zou mogelijk als een verbindingsstuk kunnen dienen tussen de verschillende microservices en/of tussen verschillende onderdelen van Hazelcast. Te denken valt hier bijvoorbeeld aan routing betreffende versies van de JSON naar verschillende versies van een microservice. In dit geval kan mogelijk de JSON beperkt blijven en hoeft geen versie nummer opgenomen te worden. Deze laatste kan dan in de Apache Camel message header. Daarnaast is er een goede integratie tussen [Hazelcast en Apache Camel] en [RxJava en Apache Camel] waarvan we gebruik zouden kunnen maken.
+Er zijn libraries en frameworks die voor bijvoorbeeld routing kunnen zorgen tussen verschillende microservices, message queues, ftp-clients, file systems, enz. [Apache Camel] lijkt hiervoor een uitstekende keuze. Dit zou mogelijk als een verbindingsstuk kunnen dienen tussen de verschillende microservices en/of tussen verschillende onderdelen van Hazelcast. Te denken valt hier bijvoorbeeld aan routing betreffende versies van de JSON naar verschillende versies van een microservice. In dit geval kan mogelijk de JSON beperkt blijven en hoeft geen versie nummer opgenomen te worden. Deze laatste kan dan in de Apache Camel message header. Daarnaast is er een goede integratie tussen [Hazelcast en Apache Camel] en [RxJava en Apache Camel] waarvan we gebruik zouden kunnen maken. Zie ook het [Camel in Action] boek.
 
 [Apache Camel]: http://camel.apache.org/
 [Hazelcast en Apache Camel]: http://camel.apache.org/hazelcast-component.html
 [RxJava en Apache Camel]: http://camel.apache.org/rx.html
+[Camel in Action]: https://github.com/rvanheest-DANS-KNAW/Hazelcast-experiments/blob/master/books/CamelInAction.pdf
 
 **REST**
 
