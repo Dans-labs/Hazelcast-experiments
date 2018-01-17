@@ -1,8 +1,8 @@
-#Hazelcast
+# Hazelcast
 
 **This page reports on the research I did with Hazelcast in this repository.**
 
-##Introduction
+## Introduction
 [Hazelcast](https://hazelcast.org/) is a piece of 'middleware' that provides distributed data structures that can be shared between multiple JVMs. The data is stored in a distributed way and shared over all the nodes in cluster. Clients can connect to the cluster and use the data structures to their liking.
 
 A client connects to the cluster it operates on using the following code:
@@ -60,7 +60,7 @@ All data structures provided by Hazelcast implement the standard interfaces of t
 
 Data structures can be created by both cluster members and clients ([see experiment](https://github.com/rvanheest-DANS-KNAW/Hazelcast-experiments/tree/master/src/main/scala/nl/knaw/dans/experiments/hazelcast/client)).
 
-##Hazelcast and RxJava
+## Hazelcast and RxJava
 Besides the standard methods on these data structures, Hazelcast provides event handlers that notify the listeners of events that occur on the observed data structure. In our research we developed a small wrapper around these event handlers, such that they can be transformed into [RxJava](https://github.com/ReactiveX/RxJava) `Observable`s for further processing in a 'reactive' way.
 
 ```scala
@@ -136,10 +136,10 @@ def pollQueue[T](queue: BlockingQueue[T], timeout: Duration, scheduler: Schedule
 }
 ```
 
-##Demo applications
+## Demo applications
 This section describes the demo applications created in this study.
 
-###Names Map
+### Names Map
 A simple application (see `nl.knaw.dans.experiments.hazelcast.map`) that puts names in a `Map` and reads the values from the `Map` in another part of the application. The program can be run in 4 modes:
 
 * "fill" - fills the `Map` with a number of names
@@ -149,7 +149,7 @@ A simple application (see `nl.knaw.dans.experiments.hazelcast.map`) that puts na
 
 One remarkable thing we found is that when the `Map` is acquired from Hazelcast, one can (at least in the Scala API) use higher-order functions to iterate over it. When the `Map` is taken as a `IMap` (the Hazelcast implementation), lambdas in the higher-order functions are executed distributed. If classic loops are used instead, the code inside the loop will however be executed on the single instance on which the code is ran.
 
-###Bidirectional server-client communication
+### Bidirectional server-client communication
 The package `nl.knaw.dans.experiments.hazelcast.queue` defines a server-client communication demo where a server (called `Master`) generates lists of random numbers and puts them in a queue (called `master-to-slave`). A client (called `Slave`) observes this queue and polls the list from the queue, performs a task on this input data and stores the result in another queue (called `slave-to-master`). `Master` observes this latter queue and in this way gets the result of the 'task'.
 
 It should be noted that there can be any number of servers and clients in this scenario. In this case, there is no guarantee of ordering regarding the requests/responses. Some tasks may take longer than others and tasks may be executed in a distributed way.
